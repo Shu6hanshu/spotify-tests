@@ -9,14 +9,14 @@ public enum SpotifyApiEndpoint {
 
     private final String route;
     private final String method;
-    private final String requestClass;
-    private final String responseClass;
+    private final String requestMethod;
+    private final String responseMethod;
 
-    SpotifyApiEndpoint(String route, String method, String requestClass, String responseClass) {
+    SpotifyApiEndpoint(String route, String method, String requestMethod, String responseMethod) {
         this.route = route;
         this.method = method;
-        this.requestClass = requestClass;
-        this.responseClass = responseClass;
+        this.requestMethod = requestMethod;
+        this.responseMethod = responseMethod;
     }
 
     public String getRoute() {
@@ -27,11 +27,11 @@ public enum SpotifyApiEndpoint {
         return method;
     }
 
-    public String getRequestClass() {
-        return requestClass;
+    public String getRequestMethod() {
+        return requestMethod;
     }
 
-    public String getResponseClass() {
-        return responseClass;
+    public String getResponseMethod() {
+        return responseMethod;
     }
 } 

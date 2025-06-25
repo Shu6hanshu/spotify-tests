@@ -4,20 +4,27 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import pojo.Album;
-import pojo.Artist;
-import pojo.Track;
+import com.google.gson.*;
+import org.testng.Assert;
+import pojo.AddTracksRequest;
+import pojo.CreatePlaylistRequest;
+import pojo.entity.Album;
+import pojo.entity.Artist;
+import pojo.entity.Track;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.SpotifyAssertions;
 
 import static io.restassured.RestAssured.given;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
 public class SpotifyRequest {
+    private static Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SpotifyRequest.class);
-    public static Response sendRequest(String method, String endpoint, String accessToken, Map<String, Object> queryParams, Object body) {
+    public static Response sendRequest(String method, String endpoint, String accessToken, Map<String, Object> queryParams, Object body, Integer expectedStatusCode) {
         logger.info("Sending {} request to endpoint: {}", method, endpoint);
         if (queryParams != null && !queryParams.isEmpty()) {
             logger.info("Query params: {}", queryParams);
@@ -52,6 +59,7 @@ public class SpotifyRequest {
             default:
                 throw new IllegalArgumentException("Unsupported HTTP method: " + method);
         }
+        SpotifyAssertions.assertStatusCode(response.getStatusCode(), expectedStatusCode);
         logger.info("Response status code: {}", response.getStatusCode());
         return response;
     }
@@ -60,24 +68,34 @@ public class SpotifyRequest {
         Map<String, Object> params = new HashMap<>();
         params.put("q", query);
         params.put("type", "track");
-        return sendRequest("GET", "/search", accessToken, params, null);
+        return sendRequest("GET", "/search", accessToken, params, null,200);
     }
 
     public static Response createPlaylist(String accessToken, String userId, String name, boolean isPublic) {
-        JSONObject body = new JSONObject();
-        body.put("name", name);
-        body.put("public", isPublic);
-        return sendRequest("POST", "/users/" + userId + "/playlists", accessToken, null, body);
+        CreatePlaylistRequest createPlaylistRequest = CreatePlaylistRequest.builder()
+                .name(name)
+                .isPublic(isPublic)
+                .build();
+        String body = gson.toJson(createPlaylistRequest);
+//        JSONObject body = new JSONObject();
+//        body.put("name", name);
+//        body.put("public", isPublic);
+        return sendRequest("POST", "/users/" + userId + "/playlists", accessToken, null, body,201);
     }
 
     public static Response addTracksToPlaylist(String accessToken, String playlistId, String[] trackUris) {
-        JSONObject body = new JSONObject();
-        JSONArray uris = new JSONArray();
-        for (String uri : trackUris) {
-            uris.put(uri);
-        }
-        body.put("uris", uris);
-        return sendRequest("POST", "/playlists/" + playlistId + "/tracks", accessToken, null, body);
+        AddTracksRequest addTracksRequest = AddTracksRequest.builder()
+                .uris(Arrays.asList(trackUris))
+                .build();
+        String body = gson.toJson(addTracksRequest);
+
+//        JSONObject body = new JSONObject();
+//        JSONArray uris = new JSONArray();
+//        for (String uri : trackUris) {
+//            uris.put(uri);
+//        }
+//        body.put("uris", uris);
+        return sendRequest("POST", "/playlists/" + playlistId + "/tracks", accessToken, null, body,201);
     }
 
     public static Response replaceTracksInPlaylist(String accessToken, String playlistId, String[] trackUris) {
@@ -87,10 +105,10 @@ public class SpotifyRequest {
             uris.put(uri);
         }
         body.put("uris", uris);
-        return sendRequest("PUT", "/playlists/" + playlistId + "/tracks", accessToken, null, body);
+        return sendRequest("PUT", "/playlists/" + playlistId + "/tracks", accessToken, null, body,200);
     }
 
     public static Response deletePlaylist(String accessToken, String playlistId) {
-        return sendRequest("DELETE", "/playlists/" + playlistId + "/followers", accessToken, null, null);
+        return sendRequest("DELETE", "/playlists/" + playlistId + "/followers", accessToken, null, null,200);
     }
 } 

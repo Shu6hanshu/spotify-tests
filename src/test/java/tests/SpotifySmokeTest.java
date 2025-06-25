@@ -19,7 +19,8 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import util.SpotifyRequest;
 import util.SpotifyResponse;
-import pojo.Track;
+import pojo.entity.Track;
+import util.SpotifyAssertions;
 
 public class SpotifySmokeTest extends BaseTest {
     private static final Logger logger = LoggerFactory.getLogger(SpotifySmokeTest.class);
@@ -75,11 +76,11 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Searching for track: {} , Query: {}", track.name, query);
         Response response = SpotifyRequest.searchTrack(accessToken, query.toString());
         logger.info("Search response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 200, "Failed to search for track: " + track.name);
+
         JSONObject json = new JSONObject(response.getBody().asString());
         JSONArray items = json.getJSONObject("tracks").getJSONArray("items");
         logger.info("Number of items found: {}", items.length());
-        Assert.assertTrue(items.length() > 0, "No results for track: " + track.name);
+        SpotifyAssertions.assertValue(items.length() > 0, true, "No results for track: " + track.name, SpotifyAssertions.AssertionType.EQUALS);
         // Use parser for Track
         JSONObject trackJson = items.getJSONObject(0);
         Track parsedTrack = SpotifyResponse.parseTrack(trackJson);
@@ -87,7 +88,7 @@ public class SpotifySmokeTest extends BaseTest {
         return parsedTrack.getId();
     }
 
-    @BeforeClass
+    @Test(priority = 0)
     public void fetchTrackIds() {
         logger.info("Fetching track IDs for all tracks...");
         Map<String, String> trackIdMap = new HashMap<>();
@@ -108,30 +109,25 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Track IDs fetched: {}", trackIdMap);
     }
 
-    @Test(priority = 1)
+    @Test(priority = 1,dependsOnMethods = "fetchTrackIds")
     public void getCurrentUserId() {
         logger.info("Getting current user id...");
-        Response response = SpotifyRequest.sendRequest("GET", "/me", accessToken, null, null);
+        Response response = SpotifyRequest.sendRequest("GET", "/me", accessToken, null, null,200);
         logger.info("/me response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 200);
         userId = response.jsonPath().getString("id");
         logger.info("Current user id: {}", userId);
         Assert.assertNotNull(userId);
     }
 
-    @Test(priority = 2, dependsOnMethods = "getCurrentUserId")
+    @Test(priority = 2,dependsOnMethods = "getCurrentUserId")
     public void createPlaylistShimla() {
         logger.info("Creating playlist: Road Trip Shimla");
-        JSONObject body = new JSONObject();
-        body.put("name", "Road Trip Shimla");
-        body.put("public", false);
         Response response = SpotifyRequest.createPlaylist(accessToken, userId, "Road Trip Shimla", false);
         logger.info("Create playlist response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 201);
         playlistIdShimla = response.jsonPath().getString("id");
         logger.info("Created playlistIdShimla: {}", playlistIdShimla);
-        Assert.assertNotNull(playlistIdShimla);
-        Assert.assertEquals(response.jsonPath().getString("name"), "Road Trip Shimla");
+        SpotifyAssertions.assertValue(playlistIdShimla, null, "playlistIdShimla should not be null", SpotifyAssertions.AssertionType.NOT_NULL);
+        SpotifyAssertions.assertValue(response.jsonPath().getString("name"), "Road Trip Shimla", "Playlist name mismatch", SpotifyAssertions.AssertionType.EQUALS);
     }
 
     @Test(priority = 3, dependsOnMethods = "createPlaylistShimla")
@@ -145,7 +141,6 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Tracks being added: {}", (Object) uris);
         Response response = SpotifyRequest.addTracksToPlaylist(accessToken, playlistIdShimla, uris);
         logger.info("Add tracks response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 201);
     }
 
     @Test(priority = 4, dependsOnMethods = "addTracksToShimla")
@@ -159,7 +154,6 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Tracks after replacement: {}", (Object) uris);
         Response response = SpotifyRequest.replaceTracksInPlaylist(accessToken, playlistIdShimla, uris);
         logger.info("Replace tracks response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 201);
     }
 
     @Test(priority = 5, dependsOnMethods = "replaceTrackCwithD")
@@ -167,11 +161,10 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Creating playlist: Road Trip Jaipur");
         Response response = SpotifyRequest.createPlaylist(accessToken, userId, "Road Trip Jaipur", false);
         logger.info("Create playlist response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 201);
         playlistIdJaipur = response.jsonPath().getString("id");
         logger.info("Created playlistIdJaipur: {}", playlistIdJaipur);
-        Assert.assertNotNull(playlistIdJaipur);
-        Assert.assertEquals(response.jsonPath().getString("name"), "Road Trip Jaipur");
+        SpotifyAssertions.assertValue(playlistIdJaipur, null, "playlistIdJaipur should not be null", SpotifyAssertions.AssertionType.NOT_NULL);
+        SpotifyAssertions.assertValue(response.jsonPath().getString("name"), "Road Trip Jaipur", "Playlist name mismatch", SpotifyAssertions.AssertionType.EQUALS);
     }
 
     @Test(priority = 6, dependsOnMethods = "createPlaylistJaipur")
@@ -185,7 +178,6 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Tracks being added: {}", (Object) uris);
         Response response = SpotifyRequest.addTracksToPlaylist(accessToken, playlistIdJaipur, uris);
         logger.info("Add tracks response status: {}", response.getStatusCode());
-        Assert.assertEquals(response.getStatusCode(), 201);
     }
 
     @Test(priority = 99, dependsOnMethods = {"addTracksToShimla", "addTracksToJaipur"}, alwaysRun = true)
@@ -195,13 +187,11 @@ public class SpotifySmokeTest extends BaseTest {
             logger.info("Deleting playlistIdShimla: {}", playlistIdShimla);
             Response response = SpotifyRequest.deletePlaylist(accessToken, playlistIdShimla);
             logger.info("Delete Shimla playlist response status: {}", response.getStatusCode());
-            Assert.assertTrue(response.getStatusCode() == 200 || response.getStatusCode() == 202);
         }
         if (playlistIdJaipur != null) {
             logger.info("Deleting playlistIdJaipur: {}", playlistIdJaipur);
             Response response = SpotifyRequest.deletePlaylist(accessToken, playlistIdJaipur);
             logger.info("Delete Jaipur playlist response status: {}", response.getStatusCode());
-            Assert.assertTrue(response.getStatusCode() == 200 || response.getStatusCode() == 202);
         }
     }
 } 

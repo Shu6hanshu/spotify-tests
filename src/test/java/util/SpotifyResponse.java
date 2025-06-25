@@ -2,9 +2,9 @@ package util;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import pojo.Album;
-import pojo.Artist;
-import pojo.Track;
+import pojo.entity.Album;
+import pojo.entity.Artist;
+import pojo.entity.Track;
 import java.util.ArrayList;
 import java.util.List;
 
