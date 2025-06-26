@@ -59,13 +59,13 @@ npm start
 
 Then, open `http://127.0.0.1:8888` in a browser.
 
-![](/Users/shubhanshu.sharma/Desktop/Screenshot 2025-06-26 at 5.05.28 AM.png)
+<img width="427" alt="Screenshot 2025-06-26 at 5 05 28 AM" src="https://github.com/user-attachments/assets/11215bc8-8656-4da0-b734-18c0da8f9dd1" />
 
 Post clicking on `Log in with Spotify`
 
 Spotify OAuth Page should open up post logging in you should see a page like below
 
-![](/Users/shubhanshu.sharma/Desktop/Screenshot 2025-06-26 at 5.11.25 AM.png)
+<img width="941" alt="Screenshot 2025-06-26 at 5 27 08 AM" src="https://github.com/user-attachments/assets/fd996b70-6fe4-4ebb-8421-7df2f059f255" />
 
 Copy the entire URL and extract the refresh_token from the url `http://127.0.0.1:8888/#access_token=<SPOTIFY_ACCESS_TOKEN>&refresh_token=<SPOTIFY_REFRESH_TOKEN>`
 
