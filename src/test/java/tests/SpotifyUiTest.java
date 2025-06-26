@@ -2,9 +2,7 @@ package tests;
 
 import base.BaseUiTest;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
 import org.slf4j.Logger;
@@ -12,13 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
-import org.openqa.selenium.TimeoutException;
-import org.testng.asserts.SoftAssert;
-import tests.SpotifyHomePage;
-import tests.SpotifySearchPage;
 
-public class SpotifyLoginUiTest extends BaseUiTest {
-    private static final Logger logger = LoggerFactory.getLogger(SpotifyLoginUiTest.class);
+import org.testng.asserts.SoftAssert;
+import pojo.SpotifyHomePage;
+import pojo.SpotifySearchPage;
+
+public class SpotifyUiTest extends BaseUiTest {
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyUiTest.class);
 
     @Test
     public void testSpotifyHomePageElements() {
@@ -32,7 +30,7 @@ public class SpotifyLoginUiTest extends BaseUiTest {
         );
         // Wait for 3 seconds for dynamic content to load
         try {
-            Thread.sleep(10000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             logger.warn("Sleep interrupted", e);
             Thread.currentThread().interrupt();
@@ -105,7 +103,7 @@ public class SpotifyLoginUiTest extends BaseUiTest {
         );
         // Wait for 3 seconds for dynamic content to load
         try {
-            Thread.sleep(10000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             logger.warn("Sleep interrupted", e);
             Thread.currentThread().interrupt();

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
-<suite name="Spotify Smoke Test Suite">
+<suite name="Spotify Test Suite">
     <test name="SpotifySmokeTests">
-        <packages>
-            <package name="tests"/>
-        </packages>
-    </test>
-    <test name="SpotifyLoginUiTests">
         <classes>
-            <class name="tests.SpotifyLoginUiTest"/>
+            <class name="tests.SpotifySmokeTest"/>
+        </classes>
+    </test>
+    <test name="SpotifyUiTests">
+        <classes>
+            <class name="tests.SpotifyUiTest"/>
         </classes>
     </test>
 </suite> 
