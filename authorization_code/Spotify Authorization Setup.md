@@ -69,15 +69,6 @@ Spotify OAuth Page should open up post logging in you should see a page like bel
 
 Copy the entire URL and extract the refresh_token from the url `http://127.0.0.1:8888/#access_token=<SPOTIFY_ACCESS_TOKEN>&refresh_token=<SPOTIFY_REFRESH_TOKEN>`
 
-
-### Authorization Code Flow
-```bash
-export SPOTIFY_CLIENT_ID="your_client_id"
-export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REFRESH_TOKEN="your_authorization_code"
-mvn test
-```
-
 ## Troubleshooting
 
 ### Common Issues

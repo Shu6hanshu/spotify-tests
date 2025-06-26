@@ -2,7 +2,7 @@
 
 ## Authorization Setup
 
-Before running the tests, you need to set up Spotify authorization. Please refer to [SPOTIFY_AUTHORIZATION_SETUP.md](authorization_code/Spotify%20Authorization%20Setup.md) for detailed instructions.
+Before running the tests, you need to set up Spotify authorization. Please refer to [Spotify_Authorization_Setup.md](authorization_code/Spotify%20Authorization%20Setup.md) for detailed instructions.
 
 ### Quick Setup
 
@@ -11,7 +11,7 @@ Before running the tests, you need to set up Spotify authorization. Please refer
    ```bash
    export SPOTIFY_CLIENT_ID="your_client_id"
    export SPOTIFY_CLIENT_SECRET="your_client_secret"
-   export SPOTIFY_USE_CLIENT_CREDENTIALS="true"
+   export SPOTIFY_REFRESH_TOKEN="your_refresh_token"
    ```
 3. Run the tests:
    ```bash
