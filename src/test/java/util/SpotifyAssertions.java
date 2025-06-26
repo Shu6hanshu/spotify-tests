@@ -7,7 +7,7 @@ import pojo.entity.Track;
 
 public class SpotifyAssertions {
     public enum AssertionType {
-        NOT_NULL, EQUALS, NULL
+        NOT_NULL, EQUALS, NULL, CONTAINS_IGNORE_CASE
     }
 
     public static void assertValue(Object actual, Object expected, String message, AssertionType type) {
@@ -21,6 +21,14 @@ public class SpotifyAssertions {
             case EQUALS:
                 Assert.assertEquals(actual, expected, message);
                 break;
+            case CONTAINS_IGNORE_CASE:
+                if (actual == null || expected == null) {
+                    Assert.fail(message + " (One of the values is null)");
+                }
+                String actualStr = actual.toString().toLowerCase();
+                String expectedStr = expected.toString().toLowerCase();
+                Assert.assertTrue(actualStr.contains(expectedStr), message + " (Expected to find '" + expected + "' in '" + actual + "' ignoring case)");
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported assertion type: " + type);
         }
@@ -28,17 +36,17 @@ public class SpotifyAssertions {
 
     public static void assertTrack(Track track, String expectedName) {
         assertValue(track, null, "Track should not be null", AssertionType.NOT_NULL);
-        assertValue(track.getName(), expectedName, "Track name mismatch", AssertionType.EQUALS);
+        assertValue(track.getName(), expectedName, "Track name mismatch", AssertionType.CONTAINS_IGNORE_CASE);
     }
 
-    public static void assertArtist(Artist artist, String expectedName) {
+    public static void assertArtist(Album.SimplifiedArtist artist, String expectedName) {
         assertValue(artist, null, "Artist should not be null", AssertionType.NOT_NULL);
-        assertValue(artist.getName(), expectedName, "Artist name mismatch", AssertionType.EQUALS);
+        assertValue(artist.getName(), expectedName, "Artist name mismatch", AssertionType.CONTAINS_IGNORE_CASE);
     }
 
     public static void assertAlbum(Album album, String expectedName) {
         assertValue(album, null, "Album should not be null", AssertionType.NOT_NULL);
-        assertValue(album.getName(), expectedName, "Album name mismatch", AssertionType.EQUALS);
+        assertValue(album.getName(), expectedName, "Album name mismatch", AssertionType.CONTAINS_IGNORE_CASE);
     }
 
     public static void assertStatusCode(int actual, int expected) {

@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.util.List;
-import pojo.entity.Artist;
 
 @Data
 @Builder

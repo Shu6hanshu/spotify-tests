@@ -2,18 +2,15 @@ package util;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import com.google.gson.*;
-import org.testng.Assert;
 import pojo.AddTracksRequest;
 import pojo.CreatePlaylistRequest;
-import pojo.entity.Album;
-import pojo.entity.Artist;
-import pojo.entity.Track;
+import pojo.ReplaceTracksRequest;
+import pojo.SearchTrackRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.SpotifyAssertions;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 
 import static io.restassured.RestAssured.given;
 
@@ -64,10 +61,19 @@ public class SpotifyRequest {
         return response;
     }
 
+    public static Map<String, Object> toParamMap(String json) {
+        Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
+        HashMap<String, Object> params = gson.fromJson(json, type);
+        return params;
+    }
+
     public static Response searchTrack(String accessToken, String query) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("q", query);
-        params.put("type", "track");
+        SearchTrackRequest searchTrackRequest = SearchTrackRequest.builder()
+                .q(query)
+                .type("track")
+                .build();
+        String json = gson.toJson(searchTrackRequest);                
+        Map<String, Object> params = toParamMap(json);
         return sendRequest("GET", "/search", accessToken, params, null,200);
     }
 
@@ -77,9 +83,6 @@ public class SpotifyRequest {
                 .isPublic(isPublic)
                 .build();
         String body = gson.toJson(createPlaylistRequest);
-//        JSONObject body = new JSONObject();
-//        body.put("name", name);
-//        body.put("public", isPublic);
         return sendRequest("POST", "/users/" + userId + "/playlists", accessToken, null, body,201);
     }
 
@@ -88,23 +91,14 @@ public class SpotifyRequest {
                 .uris(Arrays.asList(trackUris))
                 .build();
         String body = gson.toJson(addTracksRequest);
-
-//        JSONObject body = new JSONObject();
-//        JSONArray uris = new JSONArray();
-//        for (String uri : trackUris) {
-//            uris.put(uri);
-//        }
-//        body.put("uris", uris);
         return sendRequest("POST", "/playlists/" + playlistId + "/tracks", accessToken, null, body,201);
     }
 
     public static Response replaceTracksInPlaylist(String accessToken, String playlistId, String[] trackUris) {
-        JSONObject body = new JSONObject();
-        JSONArray uris = new JSONArray();
-        for (String uri : trackUris) {
-            uris.put(uri);
-        }
-        body.put("uris", uris);
+        ReplaceTracksRequest replaceTracksRequest = ReplaceTracksRequest.builder()
+        .uris(Arrays.asList(trackUris))
+        .build();
+        String body = gson.toJson(replaceTracksRequest);
         return sendRequest("PUT", "/playlists/" + playlistId + "/tracks", accessToken, null, body,200);
     }
 

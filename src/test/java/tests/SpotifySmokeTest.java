@@ -1,28 +1,29 @@
 package tests;
 
 import base.BaseTest;
-import io.restassured.http.ContentType;
+import com.google.gson.Gson;
 import io.restassured.response.Response;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.testng.Reporter;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.restassured.RestAssured.given;
+import pojo.CreatePlaylistResponse;
+import pojo.SearchTrackResponse;
+import pojo.UserProfileResponse;
+import pojo.entity.Album;
+import pojo.entity.Artist;
 import util.SpotifyRequest;
-import util.SpotifyResponse;
 import pojo.entity.Track;
 import util.SpotifyAssertions;
 
 public class SpotifySmokeTest extends BaseTest {
+    private static Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SpotifySmokeTest.class);
     private String userId;
     private String playlistIdShimla;
@@ -39,29 +40,31 @@ public class SpotifySmokeTest extends BaseTest {
 
     // Track info as per Readme
     private static class TrackInfo {
-        String key;
+        String trackId;
         String name;
         String artist;
         String album;
-        TrackInfo(String key, String name, String artist, String album) {
-            this.key = key;
+        TrackInfo(String trackId, String name, String artist, String album) {
+            this.trackId = trackId;
             this.name = name;
             this.artist = artist;
             this.album = album;
         }
     }
 
+    public static TrackInfo[] trackInfo = new TrackInfo[] {
+        new TrackInfo(null, "Zinda", null, "Bhaag Milkha Bhaag"),
+        new TrackInfo(null, "Give me some Sunshine", null, "3 Idiots"),
+        new TrackInfo(null, "In The End", "Linkin Park", null),
+        new TrackInfo(null, "Yun Hi Chala Chal", null, "Swades"),
+        new TrackInfo(null, "Khalasi", null, null),
+        new TrackInfo(null, "Kya Jaipur Kya Dilli", "Rahgir", null),
+        new TrackInfo(null, "Senorita", null, "Zindagi Na Milegi Dobara")
+    };
+
     @DataProvider(name = "trackData")
-    public Object[][] trackData() {
-        return new Object[][]{
-                {new TrackInfo("A", "Zinda", null, "Bhaag Milkha Bhaag")},
-                {new TrackInfo("B", "Give me some Sunshine", null, "3 Idiots")},
-                {new TrackInfo("C", "In The End", "Linkin Park", null)},
-                {new TrackInfo("D", "Yun Hi Chala Chal", null, "Swades")},
-                {new TrackInfo("E", "Khalasi", null, null)},
-                {new TrackInfo("F", "Kya Jaipur Kya Dilli", "Rahgir", null)},
-                {new TrackInfo("G", "Senorita", null, "Zindagi Na Milegi Dobara")}
-        };
+    public static TrackInfo[] trackData() {
+        return trackInfo;
     }
 
     private String searchTrackId(TrackInfo track) {
@@ -73,40 +76,49 @@ public class SpotifySmokeTest extends BaseTest {
         if (track.album != null) {
             query.append(" album:").append(track.album);
         }
+
         logger.info("Searching for track: {} , Query: {}", track.name, query);
         Response response = SpotifyRequest.searchTrack(accessToken, query.toString());
         logger.info("Search response status: {}", response.getStatusCode());
 
-        JSONObject json = new JSONObject(response.getBody().asString());
-        JSONArray items = json.getJSONObject("tracks").getJSONArray("items");
-        logger.info("Number of items found: {}", items.length());
-        SpotifyAssertions.assertValue(items.length() > 0, true, "No results for track: " + track.name, SpotifyAssertions.AssertionType.EQUALS);
-        // Use parser for Track
-        JSONObject trackJson = items.getJSONObject(0);
-        Track parsedTrack = SpotifyResponse.parseTrack(trackJson);
+        // Deserialize the 'tracks' object from the response into the Tracks POJO
+        SearchTrackResponse searchTrackResponse = gson.fromJson(new JSONObject(response.getBody().asString()).getJSONObject("tracks").toString(), SearchTrackResponse.class);
+        logger.info("Number of items found: {}", searchTrackResponse.getTotal());
+        if (searchTrackResponse.getItems() == null || searchTrackResponse.getItems().isEmpty()) {
+            SpotifyAssertions.assertValue(false, true, "No results for track: " + track.name, SpotifyAssertions.AssertionType.EQUALS);
+            return null;
+        }
+
+        Track parsedTrack = searchTrackResponse.getItems().get(0);
         logger.info("Found track id for {}: {}", track.name, parsedTrack.getId());
+
+        Album.SimplifiedArtist parsedArtist = searchTrackResponse.getItems().get(0).getArtists().get(0);
+        logger.info("Found Artist Name for {}: {}", track.name, parsedArtist.getName());
+
+        Album parsedAlbum = searchTrackResponse.getItems().get(0).getAlbum();
+        logger.info("Found Album Name for {}: {}", track.name, parsedAlbum.getName());
+
+        if (track.name!=null) {
+            SpotifyAssertions.assertTrack(parsedTrack, track.name);
+        }
+        if (track.artist!=null) {
+            SpotifyAssertions.assertArtist(parsedArtist, track.artist);
+        }
+        if (track.album!=null) {
+            SpotifyAssertions.assertAlbum(parsedAlbum, track.album);
+        }
+
         return parsedTrack.getId();
     }
 
-    @Test(priority = 0)
-    public void fetchTrackIds() {
-        logger.info("Fetching track IDs for all tracks...");
-        Map<String, String> trackIdMap = new HashMap<>();
-        Object[][] tracks = trackData();
-        for (Object[] row : tracks) {
-            TrackInfo track = (TrackInfo) row[0];
-            String id = searchTrackId(track);
-            logger.info("Track {} ({}) has id: {}", track.key, track.name, id);
-            trackIdMap.put(track.key, id);
-        }
-        trackA = trackIdMap.get("A");
-        trackB = trackIdMap.get("B");
-        trackC = trackIdMap.get("C");
-        trackD = trackIdMap.get("D");
-        trackE = trackIdMap.get("E");
-        trackF = trackIdMap.get("F");
-        trackG = trackIdMap.get("G");
-        logger.info("Track IDs fetched: {}", trackIdMap);
+    @Test(priority = 0, dataProvider = "trackData")
+    public void fetchTrackIds(TrackInfo track) {
+        logger.info("Fetching track ID for: {}", track.name);
+        String id = searchTrackId(track);
+        logger.info("Track {} ({}) has id: {}", track.name, track.name, id);
+        // You may want to store or assert the id here as needed
+        track.trackId=id;
+        Assert.assertNotNull(id, "Track ID should not be null for " + track.name);
     }
 
     @Test(priority = 1,dependsOnMethods = "fetchTrackIds")
@@ -114,7 +126,9 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Getting current user id...");
         Response response = SpotifyRequest.sendRequest("GET", "/me", accessToken, null, null,200);
         logger.info("/me response status: {}", response.getStatusCode());
-        userId = response.jsonPath().getString("id");
+         // Deserialize the user profile response
+        UserProfileResponse userProfileResponse = gson.fromJson(response.getBody().asString(), UserProfileResponse.class);
+        userId = userProfileResponse.getId();
         logger.info("Current user id: {}", userId);
         Assert.assertNotNull(userId);
     }
@@ -124,7 +138,8 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Creating playlist: Road Trip Shimla");
         Response response = SpotifyRequest.createPlaylist(accessToken, userId, "Road Trip Shimla", false);
         logger.info("Create playlist response status: {}", response.getStatusCode());
-        playlistIdShimla = response.jsonPath().getString("id");
+        CreatePlaylistResponse createPlaylistResponse = gson.fromJson(response.getBody().asString(), CreatePlaylistResponse.class);
+        playlistIdShimla = createPlaylistResponse.getId();
         logger.info("Created playlistIdShimla: {}", playlistIdShimla);
         SpotifyAssertions.assertValue(playlistIdShimla, null, "playlistIdShimla should not be null", SpotifyAssertions.AssertionType.NOT_NULL);
         SpotifyAssertions.assertValue(response.jsonPath().getString("name"), "Road Trip Shimla", "Playlist name mismatch", SpotifyAssertions.AssertionType.EQUALS);
@@ -134,9 +149,9 @@ public class SpotifySmokeTest extends BaseTest {
     public void addTracksToShimla() {
         logger.info("Adding tracks to Shimla playlist: {}", playlistIdShimla);
         String[] uris = new String[] {
-            "spotify:track:" + trackA,
-            "spotify:track:" + trackB,
-            "spotify:track:" + trackC
+            "spotify:track:" + trackInfo[0].trackId,
+            "spotify:track:" + trackInfo[1].trackId,
+            "spotify:track:" + trackInfo[2].trackId
         };
         logger.info("Tracks being added: {}", (Object) uris);
         Response response = SpotifyRequest.addTracksToPlaylist(accessToken, playlistIdShimla, uris);
@@ -147,9 +162,9 @@ public class SpotifySmokeTest extends BaseTest {
     public void replaceTrackCwithD() {
         logger.info("Replacing track C with D in Shimla playlist: {}", playlistIdShimla);
         String[] uris = new String[] {
-            "spotify:track:" + trackA,
-            "spotify:track:" + trackB,
-            "spotify:track:" + trackD
+                "spotify:track:" + trackInfo[0].trackId,
+                "spotify:track:" + trackInfo[1].trackId,
+                "spotify:track:" + trackInfo[3].trackId
         };
         logger.info("Tracks after replacement: {}", (Object) uris);
         Response response = SpotifyRequest.replaceTracksInPlaylist(accessToken, playlistIdShimla, uris);
@@ -161,7 +176,8 @@ public class SpotifySmokeTest extends BaseTest {
         logger.info("Creating playlist: Road Trip Jaipur");
         Response response = SpotifyRequest.createPlaylist(accessToken, userId, "Road Trip Jaipur", false);
         logger.info("Create playlist response status: {}", response.getStatusCode());
-        playlistIdJaipur = response.jsonPath().getString("id");
+        CreatePlaylistResponse createPlaylistResponse = gson.fromJson(response.getBody().asString(), CreatePlaylistResponse.class);
+        playlistIdJaipur = createPlaylistResponse.getId();
         logger.info("Created playlistIdJaipur: {}", playlistIdJaipur);
         SpotifyAssertions.assertValue(playlistIdJaipur, null, "playlistIdJaipur should not be null", SpotifyAssertions.AssertionType.NOT_NULL);
         SpotifyAssertions.assertValue(response.jsonPath().getString("name"), "Road Trip Jaipur", "Playlist name mismatch", SpotifyAssertions.AssertionType.EQUALS);
@@ -171,9 +187,9 @@ public class SpotifySmokeTest extends BaseTest {
     public void addTracksToJaipur() {
         logger.info("Adding tracks to Jaipur playlist: {}", playlistIdJaipur);
         String[] uris = new String[] {
-            "spotify:track:" + trackE,
-            "spotify:track:" + trackF,
-            "spotify:track:" + trackG
+                "spotify:track:" + trackInfo[4].trackId,
+                "spotify:track:" + trackInfo[5].trackId,
+                "spotify:track:" + trackInfo[6].trackId
         };
         logger.info("Tracks being added: {}", (Object) uris);
         Response response = SpotifyRequest.addTracksToPlaylist(accessToken, playlistIdJaipur, uris);
