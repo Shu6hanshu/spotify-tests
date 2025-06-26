@@ -10,14 +10,10 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import pojo.CreatePlaylistResponse;
 import pojo.SearchTrackResponse;
 import pojo.UserProfileResponse;
 import pojo.entity.Album;
-import pojo.entity.Artist;
 import util.SpotifyRequest;
 import pojo.entity.Track;
 import util.SpotifyAssertions;
@@ -28,15 +24,6 @@ public class SpotifySmokeTest extends BaseTest {
     private String userId;
     private String playlistIdShimla;
     private String playlistIdJaipur;
-
-    // Track IDs will be populated before tests
-    private String trackA;
-    private String trackB;
-    private String trackC;
-    private String trackD;
-    private String trackE;
-    private String trackF;
-    private String trackG;
 
     // Track info as per Readme
     private static class TrackInfo {
