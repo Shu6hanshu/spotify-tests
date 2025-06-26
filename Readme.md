@@ -1,5 +1,28 @@
 # Spotify Smoke Test Plan
 
+## Authorization Setup
+
+Before running the tests, you need to set up Spotify authorization. Please refer to [SPOTIFY_AUTHORIZATION_SETUP.md](authorization_code/Spotify%20Authorization%20Setup.md) for detailed instructions.
+
+### Quick Setup
+
+1. Create a Spotify application in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Set environment variables:
+   ```bash
+   export SPOTIFY_CLIENT_ID="your_client_id"
+   export SPOTIFY_CLIENT_SECRET="your_client_secret"
+   export SPOTIFY_USE_CLIENT_CREDENTIALS="true"
+   ```
+3. Run the tests:
+   ```bash
+   mvn clean compile 
+   mvn test
+   ```
+4. Look at the results:
+   Open [Test Report](target/surefire-reports/index.html) in a browser
+
+
+
 ## Documentation
 - [Spotify Web API Reference](https://developer.spotify.com/documentation/web-api/reference/)
 
