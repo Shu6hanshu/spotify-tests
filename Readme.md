@@ -1,6 +1,16 @@
 # Spotify Smoke Test Plan - Backend Regression
 
-**Tech Stack Used** - TestNg with RestAssured Libraries.
+**Tech Stack Used**
+
+- **Java**: The primary programming language for the test framework and test cases.
+- **TestNG**: Used as the test runner and framework for organizing, executing, and reporting test cases.
+- **RestAssured**: Library for making HTTP requests and validating REST API responses in Java.
+- **Maven**: For project build automation and dependency management.
+- **SLF4J (Simple Logging Facade for Java)**: For logging test execution details.
+- **org.json**: For parsing and handling JSON responses from the Spotify API.
+- **Cursor IDE AI** (using gpt-4.1) 
+
+All dependencies are managed via Maven in the `pom.xml` file.
 
 ## Authorization Setup
 
@@ -111,4 +121,61 @@ APIs being smoke tested:
 
 # Spotify UI Test Plan - Frontend Regression
 
-**Tech Stack Used** - Selenium WebDriver using Cursor with gpt-4.1 model
+### Overview
+
+The UI test suite automates regression checks for key elements and flows on the [Spotify Web Player](https://open.spotify.com/), ensuring that critical user interface components are present and functional. The suite is implemented using Selenium WebDriver and TestNG.
+
+### Tech Stack
+
+- **Selenium WebDriver** (Java)
+- **TestNG** (test runner)
+- **SLF4J** (logging)
+- **WebDriverWait** (for dynamic waits)
+- **SoftAssert** (for grouped assertions)
+- **Cursor IDE AI** (using gpt-4.1) 
+
+### Test Cases
+
+#### 1. Home Page Elements
+
+- **Test:** `testSpotifyHomePageElements`
+- **Steps:**
+  - Navigate to https://open.spotify.com/
+  - Wait for the page to load completely.
+  - Assert the following elements are visible:
+    - Spotify logo (top left)
+    - Search bar
+    - Main navigation menu (Home, Search, Your Library)
+    - "Create Playlist" button
+    - "Liked Songs" button
+    - Footer (if present)
+- **Purpose:** Ensure all critical homepage elements are rendered and visible.
+
+#### 2. Search Functionality
+
+- **Test:** `testSpotifySearchFunctionality`
+- **Steps:**
+  - Enter a search term (e.g., "Linkin Park") in the search bar.
+  - Wait for search results to appear.
+  - Assert that relevant results are displayed (tracks, artists, albums).
+- **Purpose:** Validate that the search feature works and returns results.
+
+### How to Run
+
+1. Run the tests using TestNG:
+   ```
+   mvn test -Dtest=SpotifyUiTest
+   ```
+   or via your IDE's TestNG runner.
+
+### Notes
+
+- Waits are used to handle dynamic content loading.
+- All assertions are soft, so all checks are reported per test run.
+
+### File Reference
+
+- **Test class:** `Spotify/src/test/java/tests/SpotifyUiTest.java`
+- **Page objects:** `pojo/SpotifyHomePage.java`, `pojo/SpotifySearchPage.java`
+
+---
