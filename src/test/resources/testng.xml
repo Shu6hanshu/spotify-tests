@@ -6,4 +6,9 @@
             <package name="tests"/>
         </packages>
     </test>
+    <test name="SpotifyLoginUiTests">
+        <classes>
+            <class name="tests.SpotifyLoginUiTest"/>
+        </classes>
+    </test>
 </suite> 
